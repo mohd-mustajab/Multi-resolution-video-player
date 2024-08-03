@@ -1,0 +1,44 @@
+.Upload{
+    padding: 25px;
+    display: flex;
+    justify-content: center;
+    width: 100vw;
+}
+.media {
+    display: flex;
+    margin-top: 40px;
+
+}
+h1{
+    text-align: center;
+    width: 100vw;
+}
+.list{
+    margin-left: 40px;
+    height: 100%;
+}
+.list ul li{
+    padding: 20px;
+    cursor: pointer;
+}
+p{
+ margin-top: 100px;
+}
+video{
+    border: 2px solid grey;
+}
+@media  (min-width:300px) and (max-width:600px){
+ .Upload{
+    padding: 0;
+ }
+ .media{
+    flex-direction: column;
+ }
+ video{
+    height: 45vh;
+    width: 100%;
+ }
+ p{
+    font-size: 10px;
+ }
+}
