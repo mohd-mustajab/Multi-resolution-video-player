@@ -7,18 +7,27 @@ const ffmpegPath = require('ffmpeg-static');
 const cors = require('cors');
 const fs = require('fs');
 require('dotenv').config(); // Load environment variables
-PORT='https://multi-resolution-video-player-backend.onrender.com';
+
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 const app = express();
 
 // Enable CORS
-app.use(cors());
+const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-url.onrender.com']; // Add your frontend URL
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
 
 // Connect to MongoDB
 const connectdb = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
     console.log("Server is connected to the database");
   } catch (error) {
     console.error("Error connecting to the database:", error);
@@ -139,7 +148,7 @@ app.delete('/video/:id', async (req, res) => {
   }
 });
 
-
-app.listen(process.env.PORT||5000, () => {
-  console.log('Server started on port 5000');
+const port = process.env.PORT || 5000;
+app.listen(port, () => {
+  console.log(`Server started on port ${port}`);
 });
