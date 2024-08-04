@@ -13,7 +13,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const app = express();
 
 // Enable CORS
-const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-url.onrender.com']; // Add your frontend URL
+const allowedOrigins = ['http://localhost:3000', 'https://multi-resolution-video-player-frontend.onrender.com'];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
