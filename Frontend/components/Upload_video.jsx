@@ -4,7 +4,7 @@ const Upload_video = ({ onUpload }) => {
   const [file, setFile] = useState(null);
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+    setFile(event.target.files[0]) ;
   };
 
   const handleSubmit = async (event) => {
