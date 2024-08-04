@@ -1,6 +1,6 @@
 import React from 'react';
 
-const VideoList = ({ videos, onVideoSelect, onDelete }) => {
+const Video_list = ({ videos, onVideoSelect, onDelete }) => {
   return (
     <div>
       <h2>Uploaded Videos</h2>
@@ -16,4 +16,4 @@ const VideoList = ({ videos, onVideoSelect, onDelete }) => {
   );
 };
 
-export default VideoList;
+export default Video_list;
