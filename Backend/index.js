@@ -7,7 +7,7 @@ const ffmpegPath = require('ffmpeg-static');
 const cors = require('cors');
 const fs = require('fs');
 require('dotenv').config(); // Load environment variables
-
+PORT='https://multi-resolution-video-player-backend.onrender.com';
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 const app = express();
