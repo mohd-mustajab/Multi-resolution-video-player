@@ -31,6 +31,7 @@ const connectdb = async () => {
     console.log("Server is connected to the database");
   } catch (error) {
     console.error("Error connecting to the database:", error);
+    process.exit(1);
   }
 };
 
@@ -58,35 +59,41 @@ const upload = multer({ storage: storage });
 
 // POST endpoint to upload videos
 app.post('/upload', upload.single('video'), async (req, res) => {
-  const filePath = req.file.path;
-  const resolutions = ['144', '240', '320', '480', '720', '1080'];
-  const fileDir = path.dirname(filePath);
-  const fileName = path.basename(filePath, path.extname(filePath));
+  try {
+    const filePath = req.file.path;
+    const resolutions = ['144', '240', '320', '480', '720', '1080'];
+    const fileDir = path.dirname(filePath);
+    const fileName = path.basename(filePath, path.extname(filePath));
 
-  const video = new Video({
-    filename: fileName,
-    resolutions: resolutions
-  });
+    const video = new Video({
+      filename: fileName,
+      resolutions: resolutions
+    });
 
-  await video.save();
+    await video.save();
 
-  // Process video to different resolutions
-  resolutions.forEach((res) => {
-    const output = `${fileDir}/${fileName}_${res}p.mp4`;
-    ffmpeg(filePath)
-      .size(`?x${res}`)
-      .output(output)
-      .on('end', () => {
-        console.log(`Processed ${res}p resolution for ${fileName}`);
-      })
-      .on('error', (err) => {
-        console.error(`Error processing ${res}p resolution: ${err}`);
-      })
-      .run();
-  });
+    // Process video to different resolutions
+    resolutions.forEach((res) => {
+      const output = `${fileDir}/${fileName}_${res}p.mp4`;
+      ffmpeg(filePath)
+        .size(`?x${res}`)
+        .output(output)
+        .on('end', () => {
+          console.log(`Processed ${res}p resolution for ${fileName}`);
+        })
+        .on('error', (err) => {
+          console.error(`Error processing ${res}p resolution: ${err}`);
+        })
+        .run();
+    });
 
-  res.send('Video uploaded and processing started.');
+    res.send('Video uploaded and processing started.');
+  } catch (error) {
+    console.error('Error during video upload and processing:', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
+
 
 // GET endpoint to serve videos
 app.get('/video/:resolution/:filename', (req, res) => {
