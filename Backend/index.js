@@ -60,6 +60,10 @@ const upload = multer({ storage: storage });
 // POST endpoint to upload videos
 app.post('/upload', upload.single('video'), async (req, res) => {
   try {
+    if (!req.file) {
+      return res.status(400).send('No file uploaded');
+    }
+
     const filePath = req.file.path;
     const resolutions = ['144', '240', '320', '480', '720', '1080'];
     const fileDir = path.dirname(filePath);
