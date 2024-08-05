@@ -13,7 +13,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const app = express();
 
 // Enable CORS
-const allowedOrigins = ['http://localhost:3000', 'https://multi-resolution-video-player-frontend.onrender.com'];
+const allowedOrigins = ['http://localhost:5000', 'https://multi-resolution-video-player-frontend.onrender.com'];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -23,6 +23,14 @@ app.use(cors({
     }
   }
 }));
+
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+  console.log('Created uploads directory:', uploadsDir);
+} else {
+  console.log('Uploads directory already exists:', uploadsDir);
+}
 
 // Connect to MongoDB
 const connectdb = async () => {
