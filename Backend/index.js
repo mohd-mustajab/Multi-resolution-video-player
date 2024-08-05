@@ -24,14 +24,6 @@ app.use(cors({
   }
 }));
 
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-  console.log('Created uploads directory:', uploadsDir);
-} else {
-  console.log('Uploads directory already exists:', uploadsDir);
-}
-
 // Connect to MongoDB
 const connectdb = async () => {
   try {
