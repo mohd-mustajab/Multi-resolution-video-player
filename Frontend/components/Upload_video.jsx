@@ -1,41 +1,46 @@
 import React, { useState } from 'react';
 
 const Upload_video = ({ onUpload }) => {
-  const [file, setFile] = useState(null);
-  const [error, setError] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+    setSelectedFile(event.target.files[0]);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (!selectedFile) {
+      alert('Please select a file to upload.');
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('video', file);
+    formData.append('video', selectedFile);
 
     try {
-      const response = await fetch('https://multi-resolution-video-player-backend.onrender.com/upload', {
+      const response = await fetch('http://localhost:5000/upload', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`Server error: ${response.statusText}`);
+        throw new Error('Network response was not ok');
       }
 
-      console.log('Video uploaded and processed.');
-      onUpload(); // Notify parent to refresh the video list
+      const data = await response.json();
+      console.log('Upload successful:', data);
+
+      onUpload(); // Call the onUpload callback to refresh the list
     } catch (error) {
       console.error('Error uploading video:', error);
-      setError('Failed to upload video. Please try again later.');
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <input type="file" accept="video/*" onChange={handleFileChange} />
-      <button type="submit">Upload</button>
-      {error && <p>{error}</p>}
+      <button type="submit">Upload Video</button>
     </form>
   );
 };

@@ -14,7 +14,7 @@ const App = () => {
 
   const fetchVideos = async () => {
     try {
-      const response = await fetch('https://multi-resolution-video-player-backend.onrender.com/videos');
+      const response = await fetch('http://localhost:5000/videos');
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -35,9 +35,12 @@ const App = () => {
 
   const handleVideoDelete = async (id) => {
     try {
-      await fetch(`https://multi-resolution-video-player-backend.onrender.com/video/${id}`, {
+      const response = await fetch(`http://localhost:5000/video/${id}`, {
         method: 'DELETE',
       });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
       fetchVideos(); // Refresh the list after a video is deleted
     } catch (error) {
       console.error('Error deleting video:', error);
@@ -48,15 +51,15 @@ const App = () => {
     <div>
       <h1>Video Player</h1>
       <div className="Upload">
-      <Upload_video onUpload={handleVideoUpload} />
+        <Upload_video onUpload={handleVideoUpload} />
       </div>
       <div className="media">
-      <div className="player">
-      {selectedVideo && <Video_player filename={selectedVideo} />}
-      </div>
-      <div className="list">
-      <Video_list videos={videos} onVideoSelect={handleVideoSelect} onDelete={handleVideoDelete} />
-      </div>
+        <div className="player">
+          {selectedVideo && <Video_player filename={selectedVideo} />}
+        </div>
+        <div className="list">
+          <Video_list videos={videos} onVideoSelect={handleVideoSelect} onDelete={handleVideoDelete} />
+        </div>
       </div>
     </div>
   );

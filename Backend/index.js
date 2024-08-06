@@ -13,7 +13,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const app = express();
 
 // Enable CORS
-const allowedOrigins = ['http://localhost:5000', 'https://multi-resolution-video-player-frontend.onrender.com'];
+const allowedOrigins = ['http://localhost:5000', 'http://localhost:5173'];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -27,7 +27,7 @@ app.use(cors({
 // Connect to MongoDB
 const connectdb = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+    await mongoose.connect(process.env.MONGO_URI);
     console.log("Server is connected to the database");
   } catch (error) {
     console.error("Error connecting to the database:", error);
@@ -91,13 +91,12 @@ app.post('/upload', upload.single('video'), async (req, res) => {
         .run();
     });
 
-    res.send('Video uploaded and processing started.');
+    res.json('Video uploaded and processing started.');
   } catch (error) {
     console.error('Error during video upload and processing:', error);
     res.status(500).send('Internal Server Error');
   }
 });
-
 
 // GET endpoint to serve videos
 app.get('/video/:resolution/:filename', (req, res) => {
