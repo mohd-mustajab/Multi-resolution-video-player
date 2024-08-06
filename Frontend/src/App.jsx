@@ -14,7 +14,7 @@ const App = () => {
 
   const fetchVideos = async () => {
     try {
-      const response = await fetch('http://localhost:5000/videos');
+      const response = await fetch('https://multi-resolution-video-player-backend.onrender.com/videos');
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -35,7 +35,7 @@ const App = () => {
 
   const handleVideoDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/video/${id}`, {
+      const response = await fetch(`https://multi-resolution-video-player-backend.onrender.com/video/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {

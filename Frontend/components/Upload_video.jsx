@@ -19,7 +19,7 @@ const Upload_video = ({ onUpload }) => {
     formData.append('video', selectedFile);
 
     try {
-      const response = await fetch('http://localhost:5000/upload', {
+      const response = await fetch('https://multi-resolution-video-player-backend.onrender.com/upload', {
         method: 'POST',
         body: formData,
       });
