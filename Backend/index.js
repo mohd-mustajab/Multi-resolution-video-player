@@ -3,12 +3,19 @@ const multer = require('multer');
 const path = require('path');
 const mongoose = require('mongoose');
 const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('ffmpeg-static');
 const cors = require('cors');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 require('dotenv').config(); // Load environment variables
 
-ffmpeg.setFfmpegPath(ffmpegPath);
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+ffmpeg.setFfmpegPath(require('ffmpeg-static'));
 
 const app = express();
 
@@ -40,7 +47,8 @@ connectdb();
 // Video Schema
 const videoSchema = new mongoose.Schema({
   filename: { type: String, index: true }, // Add an index
-  resolutions: [String]
+  resolutions: [String],
+  cloudinary_ids: [String]
 });
 
 const Video = mongoose.model('Video', videoSchema);
@@ -66,30 +74,46 @@ app.post('/upload', upload.single('video'), async (req, res) => {
 
     const filePath = req.file.path;
     const resolutions = ['144', '240', '320', '480', '720', '1080'];
-    const fileDir = path.dirname(filePath);
     const fileName = path.basename(filePath, path.extname(filePath));
+    const cloudinary_ids = [];
 
+    // Process video to different resolutions and upload to Cloudinary
+    await Promise.all(resolutions.map(async (res) => {
+      const output = `${fileName}_${res}p.mp4`;
+      const result = await new Promise((resolve, reject) => {
+        ffmpeg(filePath)
+          .size(`?x${res}`)
+          .output(output)
+          .on('end', async () => {
+            try {
+              const uploadResult = await cloudinary.uploader.upload(output, {
+                resource_type: 'video',
+                public_id: `${fileName}_${res}p`
+              });
+              fs.unlinkSync(output); // Remove the locally stored file
+              resolve(uploadResult.public_id);
+            } catch (error) {
+              reject(error);
+            }
+          })
+          .on('error', (err) => {
+            reject(err);
+          })
+          .run();
+      });
+      cloudinary_ids.push(result);
+    }));
+
+    // Save video info to the database
     const video = new Video({
       filename: fileName,
-      resolutions: resolutions
+      resolutions: resolutions,
+      cloudinary_ids: cloudinary_ids
     });
 
     await video.save();
 
-    // Process video to different resolutions
-    resolutions.forEach((res) => {
-      const output = `${fileDir}/${fileName}_${res}p.mp4`;
-      ffmpeg(filePath)
-        .size(`?x${res}`)
-        .output(output)
-        .on('end', () => {
-          console.log(`Processed ${res}p resolution for ${fileName}`);
-        })
-        .on('error', (err) => {
-          console.error(`Error processing ${res}p resolution: ${err}`);
-        })
-        .run();
-    });
+    fs.unlinkSync(filePath); // Remove the original uploaded file
 
     res.json('Video uploaded and processing started.');
   } catch (error) {
@@ -98,20 +122,24 @@ app.post('/upload', upload.single('video'), async (req, res) => {
   }
 });
 
-// GET endpoint to serve videos
+// GET endpoint to serve videos from Cloudinary
 app.get('/video/:resolution/:filename', (req, res) => {
   const { resolution, filename } = req.params;
-  const filePath = path.join(__dirname, 'uploads', `${filename}_${resolution}p.mp4`);
-  
-  console.log(`Fetching video: ${filePath}`);
-  
-  fs.access(filePath, fs.constants.F_OK, (err) => {
-    if (err) {
-      console.error(`File not found: ${filePath}`);
-      return res.status(404).send('File not found');
-    }
-    res.sendFile(filePath);
-  });
+  const video = Video.findOne({ filename });
+
+  if (!video) {
+    return res.status(404).send('Video not found');
+  }
+
+  const index = video.resolutions.indexOf(resolution);
+  if (index === -1) {
+    return res.status(404).send('Resolution not found');
+  }
+
+  const cloudinaryId = video.cloudinary_ids[index];
+  const videoUrl = cloudinary.url(cloudinaryId, { resource_type: 'video' });
+
+  res.redirect(videoUrl);
 });
 
 // GET endpoint to fetch the list of videos
@@ -135,19 +163,10 @@ app.delete('/video/:id', async (req, res) => {
       return res.status(404).send('Video not found');
     }
 
-    // Delete video files from the filesystem
-    const resolutions = video.resolutions;
-    const fileDir = path.join(__dirname, 'uploads');
-    resolutions.forEach((res) => {
-      const filePath = path.join(fileDir, `${video.filename}_${res}p.mp4`);
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error(`Error deleting file: ${filePath}`);
-        } else {
-          console.log(`Deleted file: ${filePath}`);
-        }
-      });
-    });
+    // Delete video files from Cloudinary
+    await Promise.all(video.cloudinary_ids.map(async (public_id) => {
+      await cloudinary.uploader.destroy(public_id, { resource_type: 'video' });
+    }));
 
     // Delete the video document from the database
     await Video.findByIdAndDelete(id);
