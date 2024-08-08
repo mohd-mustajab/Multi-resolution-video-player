@@ -1,19 +1,28 @@
 import React, { useRef, useState, useEffect } from 'react';
+import "./main.css";
+
 const resolutions = ['144', '240', '320', '480', '720', '1080'];
-import "./main.css"
 
 const Video_player = ({ filename }) => {
   const videoRef = useRef(null);
   const [currentResolution, setCurrentResolution] = useState('480');
   const [videoUrl, setVideoUrl] = useState('');
+  const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {
     if (filename) {
-      const url = `https://multi-resolution-video-player-backend.onrender.com/video/${currentResolution}/${filename}`;
-      setVideoUrl(url);
+      const url = `http://localhost:5000/video/${currentResolution}/${filename}`;
       console.log(`Updated video URL: ${url}`);
+      setVideoUrl(url);
     }
   }, [filename, currentResolution]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = currentTime;
+      videoRef.current.play(); // Optional: auto-play after resolution change
+    }
+  }, [videoUrl]);
 
   const handleDoubleClick = (event) => {
     const rect = event.target.getBoundingClientRect();
@@ -30,6 +39,11 @@ const Video_player = ({ filename }) => {
         videoRef.current.pause();
       }
     }
+  };
+
+  const handleResolutionChange = (event) => {
+    setCurrentTime(videoRef.current.currentTime); // Save the current time
+    setCurrentResolution(event.target.value); // Change resolution
   };
 
   const handleMouseDown = (event) => {
@@ -52,17 +66,28 @@ const Video_player = ({ filename }) => {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  const handleVideoError = () => {
+    console.error('Error loading video');
+  };
+
   return (
     <div>
-      <video
-        ref={videoRef}
-        src={videoUrl}
-        width="1000"
-        height="700"
-        onDoubleClick={handleDoubleClick}
-        onMouseDown={handleMouseDown}
-      />
-        <select onChange={(e) => setCurrentResolution(e.target.value)} value={currentResolution}>
+      {videoUrl ? (
+        <div>
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            width="1000"
+            height="700"
+            onDoubleClick={handleDoubleClick}
+            onMouseDown={handleMouseDown}
+            onError={handleVideoError}
+          />
+        </div>
+      ) : (
+        <div>Loading video...</div>
+      )}
+      <select onChange={handleResolutionChange} value={currentResolution}>
         {resolutions.map((res) => (
           <option key={res} value={res}>{res}p</option>
         ))}
@@ -76,8 +101,6 @@ const Video_player = ({ filename }) => {
           <li>Press and hold on the left side to go back at 3x speed</li>
         </ul>
       </div>
-        <p className="note">Note:-It can take some time to fetch your video from database due to large size of data. If video is not playing just wait 1 minute and refresh the page.</p>
-     
     </div>
   );
 };

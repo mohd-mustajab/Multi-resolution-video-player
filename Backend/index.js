@@ -14,15 +14,16 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
-console.log(process.env.CLOUDINARY_CLOUD_NAME, process.env.CLOUDINARY_API_KEY, process.env.CLOUDINARY_API_SECRET);
 
 
 ffmpeg.setFfmpegPath(require('ffmpeg-static'));
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Enable CORS
-const allowedOrigins = ['https://multi-resolution-video-player-backend.onrender.com', 'https://multi-resolution-video-player.onrender.com'];
+const allowedOrigins = ['http://localhost:5000', 'http://localhost:5173'];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -32,6 +33,7 @@ app.use(cors({
     }
   }
 }));
+
 
 // Connect to MongoDB
 const connectdb = async () => {
@@ -46,12 +48,14 @@ const connectdb = async () => {
 
 connectdb();
 
-// Video Schema
 const videoSchema = new mongoose.Schema({
-  filename: { type: String, index: true }, // Add an index
-  resolutions: [String],
-  cloudinary_ids: [String]
+  filename: { type: String, required: true, index: true },
+  cloudinary_url: { type: String, required: true },
+  cloudinary_public_id: { type: String, required: true },
+  resolutions: { type: Map, of: String, required: true } // Store resolution URLs
 });
+
+
 
 const Video = mongoose.model('Video', videoSchema);
 
@@ -68,81 +72,60 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // POST endpoint to upload videos
-app.post('/upload', upload.single('video'), async (req, res) => {
+app.post('/save-metadata', async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).send('No file uploaded');
+    console.log('Request body:', req.body);
+
+    const { filename, cloudinary_url, cloudinary_public_id, resolutions } = req.body;
+
+    if (!filename || !cloudinary_url || !cloudinary_public_id || !resolutions) {
+      console.error('Missing required fields:', { filename, cloudinary_url, cloudinary_public_id, resolutions });
+      return res.status(400).send('Missing required fields');
     }
 
-    const filePath = req.file.path;
-    const resolutions = ['144', '240', '320', '480', '720', '1080'];
-    const fileName = path.basename(filePath, path.extname(filePath));
-    const cloudinary_ids = [];
-
-    // Process video to different resolutions and upload to Cloudinary
-    await Promise.all(resolutions.map(async (res) => {
-      const output = `${fileName}_${res}p.mp4`;
-      const result = await new Promise((resolve, reject) => {
-        ffmpeg(filePath)
-          .size(`?x${res}`)
-          .output(output)
-          .on('end', async () => {
-            try {
-              const uploadResult = await cloudinary.uploader.upload(output, {
-                resource_type: 'video',
-                public_id: `${fileName}_${res}p`
-              });
-              fs.unlinkSync(output); // Remove the locally stored file
-              resolve(uploadResult.public_id);
-            } catch (error) {
-              reject(error);
-            }
-          })
-          .on('error', (err) => {
-            reject(err);
-          })
-          .run();
-      });
-      cloudinary_ids.push(result);
-    }));
-
-    // Save video info to the database
     const video = new Video({
-      filename: fileName,
-      resolutions: resolutions,
-      cloudinary_ids: cloudinary_ids
+      filename,
+      cloudinary_url,
+      cloudinary_public_id,
+      resolutions: new Map(Object.entries(resolutions)) // Convert resolutions object to a Map
     });
 
     await video.save();
-
-    fs.unlinkSync(filePath); // Remove the original uploaded file
-
-    res.json('Video uploaded and processing started.');
+    res.json('Video metadata saved successfully.');
   } catch (error) {
-    console.error('Error during video upload and processing:', error);
+    console.error('Error saving video metadata:', error.message); // Log error message
     res.status(500).send('Internal Server Error');
   }
 });
 
+
+
 // GET endpoint to serve videos from Cloudinary
-app.get('/video/:resolution/:filename', (req, res) => {
+app.get('/video/:resolution/:filename', async (req, res) => {
   const { resolution, filename } = req.params;
-  const video = Video.findOne({ filename });
 
-  if (!video) {
-    return res.status(404).send('Video not found');
+  try {
+    const video = await Video.findOne({ filename });
+
+    if (!video) {
+      return res.status(404).send('Video not found');
+    }
+
+    if (!video.resolutions.has(resolution)) {
+      return res.status(400).send('Invalid resolution');
+    }
+
+    const resolutionUrl = video.resolutions.get(resolution);
+
+    res.redirect(resolutionUrl);
+  } catch (error) {
+    console.error('Error fetching video:', error);
+    res.status(500).send('Internal Server Error');
   }
-
-  const index = video.resolutions.indexOf(resolution);
-  if (index === -1) {
-    return res.status(404).send('Resolution not found');
-  }
-
-  const cloudinaryId = video.cloudinary_ids[index];
-  const videoUrl = cloudinary.url(cloudinaryId, { resource_type: 'video' });
-
-  res.redirect(videoUrl);
 });
+
+
+
 
 // GET endpoint to fetch the list of videos
 app.get('/videos', async (req, res) => {
@@ -165,19 +148,22 @@ app.delete('/video/:id', async (req, res) => {
       return res.status(404).send('Video not found');
     }
 
-    // Delete video files from Cloudinary
-    await Promise.all(video.cloudinary_ids.map(async (public_id) => {
-      await cloudinary.uploader.destroy(public_id, { resource_type: 'video' });
-    }));
+    // Delete video from Cloudinary
+    if (video.cloudinary_public_id) {
+      const result = await cloudinary.uploader.destroy(video.cloudinary_public_id, { resource_type: 'video' });
+      console.log('Cloudinary delete result:', result);
+    }
 
     // Delete the video document from the database
     await Video.findByIdAndDelete(id);
 
     res.send('Video deleted successfully');
   } catch (error) {
-    res.status(500).send('Error deleting video');
+    console.error('Error deleting video:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
+
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {

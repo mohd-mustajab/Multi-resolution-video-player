@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Video_list = ({ videos, onVideoSelect, onDelete }) => {
+const Video_list = ({ videos, onVideoSelect, onDelete ,isdeleting}) => {
   return (
     <div>
       <h2>Uploaded Videos</h2>
@@ -8,7 +8,7 @@ const Video_list = ({ videos, onVideoSelect, onDelete }) => {
         {videos.map((video) => (
           <li key={video._id}>
             <span onClick={() => onVideoSelect(video.filename)}>{video.filename}</span>
-            <button onClick={() => onDelete(video._id)}>Delete</button>
+            <button onClick={() => onDelete(video._id)}> {isdeleting ? 'Deleting...' : 'Delete'}</button>
           </li>
         ))}
       </ul>
