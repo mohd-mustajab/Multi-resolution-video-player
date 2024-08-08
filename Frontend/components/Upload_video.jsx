@@ -5,7 +5,7 @@ import "./main.css"
 const Upload_video = ({ onUpload }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
   };
@@ -26,7 +26,7 @@ const Upload_video = ({ onUpload }) => {
   
     try {
       const response = await axios.post(
-        'https://api.cloudinary.com/v1_1/dtghszkjv/video/upload',
+        `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
         formData,
         {
           headers: {
