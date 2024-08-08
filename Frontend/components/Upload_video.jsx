@@ -26,7 +26,7 @@ const Upload_video = ({ onUpload }) => {
   
     try {
       const response = await axios.post(
-        `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/video/upload`,
+        `https://api.cloudinary.com/v1_1/dtghszkjv/video/upload`,
         formData,
         {
           headers: {
