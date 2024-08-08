@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Enable CORS
-const allowedOrigins = ['http://localhost:5000', 'http://localhost:5173'];
+const allowedOrigins = ['https://multi-resolution-video-player-backend.onrender.com', 'https://multi-resolution-video-player.onrender.com'];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {

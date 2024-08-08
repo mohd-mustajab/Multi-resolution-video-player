@@ -11,7 +11,7 @@ const Video_player = ({ filename }) => {
 
   useEffect(() => {
     if (filename) {
-      const url = `http://localhost:5000/video/${currentResolution}/${filename}`;
+      const url = `https://multi-resolution-video-player-backend.onrender.com/video/${currentResolution}/${filename}`;
       console.log(`Updated video URL: ${url}`);
       setVideoUrl(url);
     }

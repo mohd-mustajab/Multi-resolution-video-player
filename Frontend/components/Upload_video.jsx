@@ -48,7 +48,7 @@ const Upload_video = ({ onUpload }) => {
       };
   
       // Send metadata to your backend
-      await axios.post('http://localhost:5000/save-metadata', {
+      await axios.post('https://multi-resolution-video-player-backend.onrender.com/save-metadata', {
         filename: response.data.public_id, // Use Cloudinary public_id or any identifier
         cloudinary_url: response.data.secure_url,
         cloudinary_public_id: response.data.public_id,
