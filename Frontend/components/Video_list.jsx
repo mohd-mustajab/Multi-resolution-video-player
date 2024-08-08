@@ -8,7 +8,7 @@ const Video_list = ({ videos, onVideoSelect, onDelete ,isdeleting}) => {
         {videos.map((video) => (
           <li key={video._id}>
             <span onClick={() => onVideoSelect(video.filename)}>{video.filename}</span>
-            <button onClick={() => onDelete(video._id)}  disabled={isdeleting}> {isdeleting ? 'Deleting...' : 'Delete'}</button>
+            <button onClick={() => onDelete(video._id)}   disabled={deletingVideos[video.id]}>  {deletingVideos[video.id] ? 'Deleting...' : 'Delete'}</button>
           </li>
         ))}
       </ul>
