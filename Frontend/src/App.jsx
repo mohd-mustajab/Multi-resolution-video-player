@@ -47,7 +47,7 @@ const App = () => {
     } catch (error) {
       console.error('Error deleting video:', error);
     }finally {
-      setDeletingVideos(prevState => ({ ...prevState, [id]: false }));
+      setisDeleting(prevState => ({ ...prevState, [id]: false }));
     }
   };
 
