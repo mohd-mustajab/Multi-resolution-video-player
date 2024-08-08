@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Enable CORS
-const allowedOrigins = ['https://multi-resolution-video-player-backend.onrender.com', 'https://multi-resolution-video-player.onrender.com','http://localhost:5173'];
+const allowedOrigins = ['https://multi-resolution-video-player-backend.onrender.com', 'https://multi-resolution-video-player.onrender.com'];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -31,12 +31,8 @@ app.use(cors({
     } else {
       callback(new Error('Not allowed by CORS'));
     }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  }
 }));
-
-app.options('*', cors()); // Handle preflight requests
 
 
 // Connect to MongoDB
