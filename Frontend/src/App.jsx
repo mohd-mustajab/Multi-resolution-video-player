@@ -35,7 +35,7 @@ const App = () => {
   };
 
   const handleVideoDelete = async (id) => {
-    setisDeleting(true);
+    setisDeleting(prevState => ({ ...prevState, [id]: true }));
     try {
       const response = await fetch(`https://multi-resolution-video-player-backend.onrender.com/video/${id}`, {
         method: 'DELETE',
@@ -46,6 +46,8 @@ const App = () => {
       fetchVideos();
     } catch (error) {
       console.error('Error deleting video:', error);
+    }finally {
+      setDeletingVideos(prevState => ({ ...prevState, [id]: false }));
     }
   };
 
