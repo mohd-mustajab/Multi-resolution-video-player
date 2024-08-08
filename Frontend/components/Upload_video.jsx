@@ -20,13 +20,13 @@ const Upload_video = ({ onUpload }) => {
   
     const formData = new FormData();
     formData.append('file', selectedFile);
-    formData.append('upload_preset', 'video_preset'); // Replace with your actual upload preset
+    formData.append('upload_preset', 'video_preset');
   
-    setIsLoading(true); // Start the loader
+    setIsLoading(true);
   
     try {
       const response = await axios.post(
-        'https://api.cloudinary.com/v1_1/dtghszkjv/video/upload', // Replace with your actual cloud name
+        `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/video/upload`,
         formData,
         {
           headers: {
@@ -49,10 +49,10 @@ const Upload_video = ({ onUpload }) => {
   
       // Send metadata to your backend
       await axios.post('https://multi-resolution-video-player-backend.onrender.com/save-metadata', {
-        filename: response.data.public_id, // Use Cloudinary public_id or any identifier
+        filename: response.data.public_id, 
         cloudinary_url: response.data.secure_url,
         cloudinary_public_id: response.data.public_id,
-        resolutions // Send the resolutions object
+        resolutions 
       });
   
       onUpload(); // Call the onUpload callback to refresh the list
@@ -65,7 +65,7 @@ const Upload_video = ({ onUpload }) => {
         console.error('Error uploading video:', error.message);
       }
     } finally {
-      setIsLoading(false); // Stop the loader
+      setIsLoading(false); 
     }
   };
   

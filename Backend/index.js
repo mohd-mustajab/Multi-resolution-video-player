@@ -60,16 +60,16 @@ const videoSchema = new mongoose.Schema({
 const Video = mongoose.model('Video', videoSchema);
 
 // Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'uploads/');
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + path.extname(file.originalname));
+//   }
+// });
 
-const upload = multer({ storage: storage });
+// const upload = multer({ storage: storage });
 
 // POST endpoint to upload videos
 app.post('/save-metadata', async (req, res) => {
@@ -93,7 +93,7 @@ app.post('/save-metadata', async (req, res) => {
     await video.save();
     res.json('Video metadata saved successfully.');
   } catch (error) {
-    console.error('Error saving video metadata:', error.message); // Log error message
+    console.error('Error saving video metadata:', error.message); 
     res.status(500).send('Internal Server Error');
   }
 });

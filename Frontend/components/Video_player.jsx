@@ -20,7 +20,7 @@ const Video_player = ({ filename }) => {
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.currentTime = currentTime;
-      videoRef.current.play(); // Optional: auto-play after resolution change
+      videoRef.current.play(); // auto-play after resolution change
     }
   }, [videoUrl]);
 

@@ -31,7 +31,7 @@ const App = () => {
   };
 
   const handleVideoUpload = () => {
-    fetchVideos(); // Refresh the list after a new video is uploaded
+    fetchVideos(); // Refresh 
   };
 
   const handleVideoDelete = async (id) => {
@@ -43,7 +43,7 @@ const App = () => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      fetchVideos(); // Refresh the list after a video is deleted
+      fetchVideos();
     } catch (error) {
       console.error('Error deleting video:', error);
     }
