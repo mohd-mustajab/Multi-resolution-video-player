@@ -75,6 +75,7 @@ const Upload_video = ({ onUpload }) => {
       <button type="submit" disabled={isLoading}>
         {isLoading ? 'Uploading...' : 'Upload Video'}
       </button>
+      <p>Make sure video size should be under 100MB.</p>
       {isLoading && <div className="loader">.</div>}
     </form>
   );
